@@ -64,7 +64,7 @@ Step by step tutorial on the usage can be found in the following list of Jupiter
 
 ## Note
 
-1. The data attached in this repo are just for demo purpose. The channel information has been removed. Please do not use it for other purpose.
+ * The data attached in this repo are just for demo purpose. The channel information has been removed. Please do not use it for other purpose.
 
 ## Acknowledgement 
 
