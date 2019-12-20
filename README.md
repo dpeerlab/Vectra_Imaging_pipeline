@@ -62,7 +62,9 @@ Step by step tutorial on the usage can be found in the following list of Jupiter
 - [ ] Integrate all the functions from the pipeline into a package 
 - [ ] Provide more pre-trained weights for segmentation task on different marker panel 
 
+## Note
 
+1. The data attached in this repo are just for demo purpose. The channel information has been removed. Please do not use it for other purpose.
 
 ## Acknowledgement 
 
