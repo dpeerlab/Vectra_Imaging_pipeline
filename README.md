@@ -15,7 +15,7 @@ First, preprocess raw images to remove undesired noise (introduced by technical 
 * Clone this repository
 
   ```bash
-  git clone Vectra_Imaging_Pineline
+  git clone https://github.com/dpeerlab/Vectra_Imaging_pipeline.git
   ```
 
 * Create a new conda environment for this pipeline 
