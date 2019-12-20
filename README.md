@@ -1,8 +1,12 @@
 # Vectra Imaging Processing Pipeline
 
-Multiplex imaging data is providing dramatic opportunities to understand the tumor microenvironment, but there is an acute need for better analysis tools. Here we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
+Multiplexed imaging data is providing dramatic opportunities to understand the tumor microenvironment, but there is an acute need for better analysis tools. Here, we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
 
-First, preprocess raw images to remove undesired noise (introduced by technical sources) while retaining biological signal. Next, perform segmentation to draw boundaries around individual cells, making it possible to discern morphology and which features, such as detected RNA or protein belong to each cell. Finally, extract cellular feature from images via segmentation and assign cell types to each cell.  We have been working on each of these steps, applying, comparing and optimizing cutting-edge computer vision and machine learning techniques to transform digital images into cell-level measurements. All the codes are wroten in Python.
+1. Preprocess raw images to remove undesired noise (introduced by technical sources) while retaining biological signal  
+2. Perform segmentation to draw boundaries around individual cells, making it possible to discern morphology and which features, such as detected RNA or protein, belong to each cell.  
+3. Extract cellular feature from images via segmentation and assign cell types to each cell. 
+
+To transform digital images into cell-level measurements, we have been applying, comparing and optimizing cutting-edge computer vision and machine learning techniques to each of the steps above. All code is written in Python.
 
 
 
@@ -30,7 +34,7 @@ First, preprocess raw images to remove undesired noise (introduced by technical 
 
 ### Usage
 
-Step by step tutorial on the usage can be found in the following list of Jupiter notebooks.
+Step-by-step tutorial on the usage can be found in the following Jupiter notebooks:
 
 #### 0. Data inspection
 
@@ -57,14 +61,14 @@ Step by step tutorial on the usage can be found in the following list of Jupiter
 
 ![img](./resource/figure/pipeline_overview.png)
 
-## Future plan 
+## Future plans 
 
-- [ ] Integrate all the functions from the pipeline into a package 
-- [ ] Provide more pre-trained weights for segmentation task on different marker panel 
+- [ ] Integrate all pipeline functions into a package 
+- [ ] Provide more pre-trained weights for segmentation using different marker panels 
 
 ## Note
 
- * The data attached in this repo are just for demo purpose. Please do not use it for other purpose.
+ * The data in this repo are for demonstration only. Please do not use them for any other purposes.
 
 ## Acknowledgement 
 
