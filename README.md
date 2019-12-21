@@ -65,7 +65,6 @@ Step-by-step tutorial on the usage can be found in the following Jupiter noteboo
 
 ## Future plan
 
-- [ ] Integrate all pipeline functions into a package 
 - [ ] Provide more pre-trained weights for segmentation using different marker panels 
 
 ## Note
