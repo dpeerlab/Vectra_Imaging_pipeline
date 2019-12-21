@@ -18,19 +18,21 @@ To transform digital images into cell-level measurements, we have been applying,
 
 * Clone this repository
 
-  ```bash
-  git clone https://github.com/dpeerlab/Vectra_Imaging_pipeline.git
-  ```
-
 * Create a new conda environment for this pipeline 
 
 * ```bash
-  conda env create -n vinci -f environment.yml 
+  conda env create -n davinci -f environment.yml 
+  source activate davinci
+python -m ipykernel install --user --name davinci
+  ```
+  
+* Install this package
+
+* ```bash
+  python setup.py install
   ```
 
-* Create another conda environment for deep learning model following the instruction on [link](https://github.com/dpeerlab/Mask_R-CNN_cell)
-
-
+* Install the deep learning model following the instruction on [link](https://github.com/dpeerlab/Mask_R-CNN_cell)
 
 ### Usage
 
@@ -38,30 +40,30 @@ Step-by-step tutorial on the usage can be found in the following Jupiter noteboo
 
 #### 0. Data inspection
 
-* Image file inspection
-* Image data inspection
-* Image visualization 
+* Image file inspection [Notebook](./notebook/0.1.Image_file_inspection.ipynb)
+* Image data inspection [Notebook](./notebook/0.2.Image_data_inspection.ipynb)
+* Image visualization  [Notebook](./notebook/0.3.Image_visualization.ipynb)
 
 #### 1. Preprocessing 
 
-* Image preprocessing 
-* Image QC report 
+* Image preprocessing  [Notebook](./notebook/1.1.Image_preprocessing.ipynb)
+* Image QC report  [Notebook](./notebook/1.2.Image_QC_report.ipynb)
 
 #### 2. Segmentation 
 
-* Train deep learning model on custom data
-* Predict segmentation with pre-trained model
+* Train deep learning model on custom data [Notebook](./notebook/2.1.Image_segmentation_train.ipynb)
+* Predict segmentation with pre-trained model [Notebook](./notebook/2.2.Image_Segmentation_prediction.ipynb)
 
 #### 3. Cell typing
 
-* Cell feature extraction
-* Cell typing
+* Cell feature extraction [Notebook](./notebook/3.1.Cell_feature_extraction.ipynb)
+* Cell typing [Notebook](./notebook/3.2.Cell_typing.ipynb)
 
 ## Workflow
 
 ![img](./resource/figure/pipeline_overview.png)
 
-## Future plans 
+## Future plan
 
 - [ ] Integrate all pipeline functions into a package 
 - [ ] Provide more pre-trained weights for segmentation using different marker panels 
@@ -79,6 +81,3 @@ This work is supported by [Parker Institute for Cancer Immunotherapy](https://ww
 ## Reference
 
 He, K., G. Gkioxari, P. Dollár, and R. Girshick. 2017. “Mask R-CNN.” In *2017 IEEE International Conference on Computer Vision (ICCV)*, 2980–88. [link](https://arxiv.org/abs/1703.06870)
-
-
-
