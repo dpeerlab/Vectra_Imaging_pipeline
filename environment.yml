@@ -1,0 +1,28 @@
+name: Vinci
+channels:
+  - anaconda
+  - https://repo.anaconda.com/pkgs/free
+  - defaults
+dependencies:
+  - ipykernel=5.1.3=py37h5ca1d4c_0
+  - pip
+  - pip:
+    - cython==0.29.8
+    - h5py==2.10.0
+    - imageio==2.6.1
+    - matplotlib==2.2.3
+    - networkx==2.4
+    - numba==0.44.1
+    - numpy==1.16.0
+    - pandas==0.23.4
+    - pillow==6.2.1
+    - scikit-image==0.16.2
+    - scikit-learn==0.20.3
+    - scipy==1.2.1
+    - seaborn==0.9.0
+    - tifffile==2019.7.2
+    - joblib==0.14.0
+    - tables==3.5.2
+    - tqdm==4.32.1
+    - ipywidgets==7.5.1
+    
