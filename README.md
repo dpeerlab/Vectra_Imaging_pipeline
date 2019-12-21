@@ -32,7 +32,7 @@ To transform digital images into cell-level measurements, we have been applying,
   python setup.py install
   ```
 
-* Install the deep learning model following the instruction on [link](https://github.com/dpeerlab/Mask_R-CNN_cell)
+* Install the deep learning model for segmentation following the instruction on [link](https://github.com/dpeerlab/Mask_R-CNN_cell)
 
 ### Usage
 
