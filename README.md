@@ -23,7 +23,7 @@ To transform digital images into cell-level measurements, we have been applying,
 * ```bash
   conda env create -n davinci -f environment.yml 
   source activate davinci
-python -m ipykernel install --user --name davinci
+  python -m ipykernel install --user --name davinci
   ```
   
 * Install this package
