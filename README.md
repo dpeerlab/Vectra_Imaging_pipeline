@@ -73,7 +73,10 @@ Step-by-step tutorial on the usage can be found in the following Jupiter noteboo
 
 ## Acknowledgement 
 
-This work is supported by [Parker Institute for Cancer Immunotherapy](https://www.parkerici.org/)
+This work is supported by 
+* [The Alan and Sandra Gerry Metastasis and Tumor Ecosystems Center](https://www.mskcc.org/research-programs/metastasis-research)
+* [Human Tumor Atlas Network](https://www.cancer.gov/research/key-initiatives/moonshot-cancer-initiative/implementation/human-tumor-atlas), Memorial Sloan Kettering Cancer Center section.
+* [Parker Institute for Cancer Immunotherapy](https://www.parkerici.org/)
 
 
 
