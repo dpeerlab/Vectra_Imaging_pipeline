@@ -9,9 +9,6 @@ Multiplexed imaging data is providing dramatic opportunities to understand the t
 To transform digital images into cell-level measurements, we have been applying, comparing and optimizing cutting-edge computer vision and machine learning techniques to each of the steps above. All code is written in Python.
 
 
-
-
-
 ## Quick Start 
 
 ### Dependencies
