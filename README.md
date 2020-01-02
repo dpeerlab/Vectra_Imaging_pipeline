@@ -34,7 +34,7 @@ To transform digital images into cell-level measurements, we have been applying,
 ### Usage
 
 Step-by-step tutorial on the usage can be found in the following Jupiter notebooks:
-
+More details can be found in the [technical notes](./technical_notes.md)
 #### 0. Data inspection
 
 * Image file inspection [Notebook](./notebook/0.1.Image_file_inspection.ipynb)
