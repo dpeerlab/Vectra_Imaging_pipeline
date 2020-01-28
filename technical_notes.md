@@ -1,10 +1,10 @@
 # Documentation for Vectra Analysis Pipeline
 
-Cancer progression and metastasis involve complex interplay between heterogeneous cancer cells and the tumor microenvironment (TME). The current advances in cancer therapeutic options including immune-checkpoint inhibitors, novel targeted agents have emphasized the prognostic and pathophysiological roles of the TME. Multiplexed imaging data is providing dramatic opportunities to understand the tumor microenvironment, but there is an acute need for better analysis tools. Here, we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
+Cancer progression and metastasis involve a complex interplay between heterogeneous cancer cells and the tumor microenvironment (TME). Recent research into cancer therapeutic options, including immune-checkpoint inhibitors and novel targeted agents, has emphasized the prognostic and pathophysiological roles of the TME. Multiplexed imaging data is providing dramatic opportunities to understand the TME, but there is an acute need for better analysis tools. Here, we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
 
 1. Preprocess raw images to remove undesired noise (introduced by technical sources) while retaining biological signal  
-2. Perform segmentation to draw boundaries around individual cells, making it possible to discern morphology and which features, such as detected RNA or protein, belong to each cell.  
-3. Extract cellular feature from images via segmentation and assign cell types to each cell. 
+2. Perform segmentation to draw boundaries around individual cells, making it possible to discern morphology and to determine which features, such as detected RNA or protein, belong to each cell.  
+3. Extract cellular features from images via segmentation and assign cell types to each cell. 
 
 To transform digital images into cell-level measurements, we have been applying, comparing and optimizing cutting-edge computer vision and machine learning techniques to each of the steps above. All code is written in Python.
 
@@ -36,36 +36,36 @@ To transform digital images into cell-level measurements, we have been applying,
 
 ### 0. Data inspection
 
-The first step in the analysis is to inspect the experimental setup and examine the data. We will confirm the data composition, signal distribution and visualize the images into RGB (Red-Green-Blue) space.
+The first step in the analysis is to inspect the experimental setup and examine the data, by confirming the data composition and signal distribution, and visualizing the images in RGB (Red-Green-Blue) space.
 
 #### 0.1. Image file inspection [Notebook](./notebook/0.1.Image_file_inspection.ipynb)
 
-First, we check the composition of the image files, including information like sample id, image size and markers in the studies. Then we will remove the samples that are not included in a specific study, check the missing samples, and remove the duplicated images. 
+First, check the composition of the image files, including information such as sample ID, image size and markers present. Then remove extraneous samples, check for missing samples and remove duplicated images.
 
-Step 1: Input the path of the raw TIF data and use `glob` to finds all the pathnames matching a specified pattern according to the rules used by the Unix shell. Example:
+Step 1: Input the path of the raw TIF data and use the `glob` function to find all the pathnames matching a specified pattern according to the rules used by the Unix shell. Example:
 
 ```python
 folder_path = '../data/tif/*.tif'
 file_list = sorted(glob.glob(folder_path))
 ```
 
-Step 2: Open the image files in a loop and save its size information. With the `np.unique` function, we will get the count of different image size. This step provide the important information of the image size composition in the data. Together with the magnification information, this will help understand the physical size of the image. Sometimes in one cohort, the image have different sizes, which is important to consider during the downstream analysis.
+Step 2: Open the image files in a loop and record their size information. The `np.unique` function can be used to determine the number of images of each size. This information, together with magnification, will help to ascertain the physical size of the image. One cohort will sometimes include images with different sizes, which has important implications for downstream analysis.
 
-Step 3: Parse the marker information from the file metadata. If the information is stored during data generation, we can parse it out from metadata in the tiff file with `tifffile`. Otherwise, type the marker information there. It is very important to make sure the marker info is correct. It would be wise to check the actual image of each marker to confirm this.
+Step 3: Parse marker information from the file metadata. If the information is stored during data generation, we can parse it out from metadata in the TIF file with `tifffile`. Otherwise, enter marker information manually. It is very important to make sure that the marker information is correct; we recommend double-checking the actual image for each marker to confirm this.
 
-Step 4: Check missing and redundant data in the dataset. Given a cohort, sometimes there are extra, redundant and missing samples in the dataset. Here, we first define a cohort id list, either from manual typing, or from other dataset. Then we parse the sample id from the image filename to identify extra, redundant and missing samples. At the end, we move redundant data with `shutil.move`, and try to find the missing data by contacting the ones who provide data.
+Step 4: Check for extra, redundant or missing samples in the cohort dataset. To remedy this, first define a cohort ID list, either manually or using another dataset. Then parse the sample ID from the image filename to identify extraneous and missing samples. Finally, remove redundant data using `shutil.move`, and contact the data provider about missing data.
 
-Step 5. Check the data composition again after the correction.
+Step 5. Check data composition again after the correction.
 
 #### 0.2. Image data inspection [Notebook](./notebook/0.2.Image_data_inspection.ipynb)
 
-In a multiple sample experimental setup, data normalization is very important. In this step, we will look at the signal intensity distribution and find optimized parameters for normalization. Given the nature of the fluorescent imaging, the maximum intensity of the signal in the data is important to us.
+In an experimental design with multiple samples, data normalization is very important. This step of the pipeline examines the signal intensity distribution and finds optimized normalization parameters. Given the nature of fluorescence imaging, maximal signal intensity is an important parameter.
 
-Step 1. Get the image file list with `glob`, load the image with `tifffile.imread` and smooth the data with `ndimage.gaussian_filter` of scipy to get rid of outliers. 
+Step 1. Get the image file list with `glob`, load the image with `tifffile.imread` and smooth the data with `ndimage.gaussian_filter` from the scipy package to remove outliers. 
 
-Step 2. Display the distribution of max intensity from each image and each sample to have an overall impression of each channel. This step will provide us information like: what does the max intensity look like in marker positive images; what does it look like in negative ones; how different max values in positive images differ from each other. 
+Step 2. Display the distribution of max intensity from each image and each sample to have an overall impression of each channel. This step indicates how the max intensity looks in marker-positive and -negative images, and how different max values differ from each other in positive images.
 
-Step 3. Find a threshold for a marker being positive. One key note here is that not all images are positive for all markers. It is possible that there is no positive staining of a certain marker in some images. However, in most normalization cases, the image signals are usually normalized by max value in the image. To properly normalize these cases, we need to manually find a threshold for a marker being positive. And save the results together with the ones that are above this threshold. What's more, we visualize some of the images before and after normalization to validate the choice of the threshold.    
+Step 3. Determine a threshold for calling a marker positive. It is important to note that that not all images are positive for all markers, yet signals are usually normalized based on the max value in the image. To properly normalize marker-negative cases, we need to manually find a threshold and save the results together with those above this threshold. It is also important to visualize some of the images before and after normalization to validate the choice of threshold.    
 
 #### 0.3. Image visualization  [Notebook](./notebook/0.3.Image_visualization.ipynb)
 
