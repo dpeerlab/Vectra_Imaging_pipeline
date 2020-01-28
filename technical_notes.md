@@ -2,7 +2,7 @@
 
 Cancer progression and metastasis involve a complex interplay between heterogeneous cancer cells and the tumor microenvironment (TME). Recent research into cancer therapeutic options, including immune-checkpoint inhibitors and novel targeted agents, has emphasized the prognostic and pathophysiological roles of the TME. Multiplexed imaging data is providing dramatic opportunities to understand the TME, but there is an acute need for better analysis tools. Here, we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
 
-1. Preprocess raw images to remove undesired noise (introduced by technical sources) while retaining biological signal  
+1. Preprocess raw images to remove undesired noise (introduced by technical sources) while retaining biological signal.  
 2. Perform segmentation to draw boundaries around individual cells, making it possible to discern morphology and to determine which features, such as detected RNA or protein, belong to each cell.  
 3. Extract cellular features from images via segmentation and assign cell types to each cell. 
 
@@ -51,7 +51,7 @@ file_list = sorted(glob.glob(folder_path))
 
 Step 2: Open the image files in a loop and record their size information. The `np.unique` function can be used to determine the number of images of each size. This information, together with magnification, will help to ascertain the physical size of the image. One cohort will sometimes include images with different sizes, which has important implications for downstream analysis.
 
-Step 3: Parse marker information from the file metadata. If the information is stored during data generation, we can parse it out from metadata in the TIF file with `tifffile`. Otherwise, enter marker information manually. It is very important to make sure that the marker information is correct; we recommend double-checking the actual image for each marker to confirm this.
+Step 3: Parse marker information from the file metadata. If the information is stored during data generation, we can parse it out from metadata in the TIF file using `tifffile`. Otherwise, enter marker information manually. It is very important to make sure that the marker information is correct; we recommend double-checking the actual image for each marker to confirm this.
 
 Step 4: Check for extra, redundant or missing samples in the cohort dataset. To remedy this, first define a cohort ID list, either manually or using another dataset. Then parse the sample ID from the image filename to identify extraneous and missing samples. Finally, remove redundant data using `shutil.move`, and contact the data provider about missing data.
 
@@ -59,61 +59,61 @@ Step 5. Check data composition again after the correction.
 
 #### 0.2. Image data inspection [Notebook](./notebook/0.2.Image_data_inspection.ipynb)
 
-In an experimental design with multiple samples, data normalization is very important. This step of the pipeline examines the signal intensity distribution and finds optimized normalization parameters. Given the nature of fluorescence imaging, maximal signal intensity is an important parameter.
+In an experimental design with multiple samples, data normalization is very important. This step of the pipeline examines the signal intensity distribution and finds optimized normalization parameters. Maximal signal intensity is a key parameter in fluorescence imaging.
 
-Step 1. Get the image file list with `glob`, load the image with `tifffile.imread` and smooth the data with `ndimage.gaussian_filter` from the scipy package to remove outliers. 
+Step 1. Obtain the image file list using `glob`, load the image with `tifffile.imread` and smooth the data with `ndimage.gaussian_filter` from the scipy package to remove outliers. 
 
-Step 2. Display the distribution of max intensity from each image and each sample to have an overall impression of each channel. This step indicates how the max intensity looks in marker-positive and -negative images, and how different max values differ from each other in positive images.
+Step 2. Display the distribution of max intensity from each image and sample to have an overall impression of each channel. This step indicates how the max intensity looks in marker-positive and marker-negative images, and how max values differ from each other in positive images.
 
-Step 3. Determine a threshold for calling a marker positive. It is important to note that that not all images are positive for all markers, yet signals are usually normalized based on the max value in the image. To properly normalize marker-negative cases, we need to manually find a threshold and save the results together with those above this threshold. It is also important to visualize some of the images before and after normalization to validate the choice of threshold.    
+Step 3. Determine a threshold for calling a marker positive. It is important to note that all images are not positive for all markers, yet signals are usually normalized based on the max value in the image. To properly normalize marker-negative cases, we need to manually find a threshold and save the results together with those above this threshold. It is also important to visualize some of the images before and after normalization in order to to validate the choice of threshold.    
 
 #### 0.3. Image visualization  [Notebook](./notebook/0.3.Image_visualization.ipynb)
 
-In raw images from the imaging system are usually in a format with multiple single channel image. To better visualize them in one image, we need to convert some of the marker into RGB/multiple color space.
+Raw images are usually in a format containing multiple single channel images. To better visualize all channels in one image, some of the markers need to be converted into RGB/multiple color space.
 
-Step 1. Get the list of target `tif` images and design a color panel for the marker. In theory and in practice, 7 colors are the limit of a good visualization with them being `green, white(gray), cyan, yellow, magenta,blue, red  ` . The channel order for the color can be assigned in the function `convert_one_image` with parameter `color_list`. 
+Step 1. Get the list of target `tif` images and design a color panel for the marker. In both theory and practice, 7 colors are the limit of a good visualization; in particular, `green, white (gray), cyan, yellow, magenta, blue, red`. The channel order for the color can be assigned in the function `convert_one_image` with parameter `color_list`. 
 
-The `tqdm` function will show the progress of converting the images. Then when it is done, we can visualize them in notebook, or just open in windows. The images are saved in `png` format.
+The `tqdm` function shows the progress of converting the images. When complete, converted images can be visualized in a notebook, or simply opened in windows. The images are saved in `png` format.
 
 
 
 ### 1. Preprocessing 
 
-In this step, we will demonstrate preprocessing step, which is to remove undesired noise from the data. Then we will visualize before and after preprocessing as a quality control report.
+The preprocessing step removes undesired noise from the data. Visualization before and after preprocessing serves as a quality control check.
 
 #### 1.1. Image preprocessing  [Notebook](./notebook/1.1.Image_preprocessing.ipynb)
 
-Here we will remove noise in the images. The thresholding can be done automatically. However, it does not always work. In this case, we will set a boundary for the thresholds per sample. We visualize the results here and record the min and max for the parameters if the automatical calculated values that based on the distribution are not perfect. Then at the end, we record the thresholds with the guidance of the min and max values.
+Thresholding is used to remove noise and can be performed automatically, though automated thresholding is not always successful. In this case, we will set a boundary for the thresholds per sample. We visualize the results here and record the min and max for the parameters if the automatical calculated values that based on the distribution are not perfect. Then at the end, we record the thresholds with the guidance of the min and max values.
 
-Step 1. Create blank DataFrame to store the min and max threshold information in a per sample and per marker format. 
+Step 1. Create blank DataFrame to store the min and max threshold information per sample and per marker. 
 
-Step 2. Go through each channel and each sample, and set the best min, and max value for them. Most of the cases, `min=2`, `min=4` works. However, when the noises are strong, the values should be increased. 
+Step 2. Go through each channel and each sample, and set the best min and max values. In most cases, `min=2`, `min=4` works. However, when there is substantial noise, the values should be increased. 
 
-Step 3. If the automatical thresholding function does not provide good values, check the `threshold_one`,`threshold_one_plot` function. 
+Step 3. If the automatic thresholding function does not provide good values, check the `threshold_one`,`threshold_one_plot` function. 
 
 #### 1.2. Image QC report  [Notebook](./notebook/1.2.Image_QC_report.ipynb)
 
-The raw data of imaging systems are not human-readable. Even after converting them into RGB format, there are too many of them (hundreds) to watch one by one. The function of the QC report is to place the image from one sample into one file and display all the channels there before and after the preprocessing. Based on the report, we can fine-tune some preprocessing parameters or delete some bad data from the dataset.
+Raw image data cannot usually be parsed manually. Even after converting to RGB format, there are too many images to assess individually. The function of the QC report is to group all channel images from one sample into a single file, and to enable visualization before and after preprocessing. Based on the report, preprocessing parameters can be fine-tuned, or bad data can be deleted from the dataset.
 
 Step 1. Load raw image, choose a report folder and project name. 
 
-Step2. Generate a report just for raw data. Since we will parse the sample ID and other information from the file name, some future modification might be needed for different naming system. The user should find the `one_report` function from the source code and do some modification.
+Step 2. Generate a report for raw data. Since we will parse the sample ID and other information from the file name, some future modification might be needed for different naming system. The user should find the `one_report` function from the source code and do some modification.
 
-Step 3. Generate a report with before and after preprocessing images. Load the `threshold` and `max_cap` parameters from previous notebooks. Otherwise it is the same as the above step.
+Step 3. Generate a report for images with and without preprocessing. Load the `threshold` and `max_cap` parameters from previous notebooks, and otherwise proceed in the same manner as the step above.
 
-Step 4. Run through all the images and save the thresholds into a local file.
+Step 4. Run through all the images and save the thresholds in a local file.
 
 ### 2. Segmentation 
 
-To get single cell information from the images, we will use deep learning method - Mask R-CNN to do instance segmentation on the RGB images. Before the training, check the background of the method and the installation information via [link](https://github.com/dpeerlab/Mask_R-CNN_cell). GPU is highly recommended for training. 
+To obtain single-cell information, the deep learning method Mask R-CNN can be used to perform instance segmentation on the RGB images. Before using Mask R-CNN, we recommend learning about the method and its installation via [link](https://github.com/dpeerlab/Mask_R-CNN_cell). GPU hardware is highly advised for training. 
 
 #### 2.1. Train deep learning model on custom data [Notebook](./notebook/2.1.Image_segmentation_train.ipynb)
 
-With target images and some human annotated masks, we can train the deep learning model to predict segmentation results. We recommend 10+ training images with size larger than 400x400 pixel under 200X magnification. 
+With target images and some human-annotated masks, we can train the deep learning model to predict segmentation results. We recommend 10+ training images larger than 400x400 pixels under 200x magnification. 
 
-Step 1.  Load the training images, and its annotation. Here we assume the mask is a single channel image with each object separated with each other. We will visualize 5 of them to check if the image and annotation match each other. By default, the images will be randomly cropped into 128*128 size during training. It provides best results during testing. You can change it in `CellConfig()`function. You can adjust the parameter `RPN_ANCHOR_SCALES`, which is the size of your target.
+Step 1. Load the training images with annotations. Each mask is assumed to be a single-channel image in which objects do not overlap. Five or more masks should be visualized to check if the images and annotations match each other. By default, the images will be randomly cropped to 128*128 pixels during training. This size provides the best results during testing, but can be changed in the `CellConfig()` function by adjusting the parameter `RPN_ANCHOR_SCALES`, which denotes the target size.
 
-Step 2. Set the training configuration. `init_with = "imagnet" ` or `init_with = "coco" ` will largely improve the results since the model weighted will learn basic segmentation on natural images. We also add data  augmentation into our training as shown here.
+Step 2. Configure the training. `init_with = "imagnet" ` or `init_with = "coco"` will largely improve the results since the  weighted model will learn basic segmentation on natural images. Data augmentation is also applied to the training data, as shown below:
 
 ```python
 augmentation = iaa.SomeOf((0, 5), [
@@ -125,42 +125,42 @@ augmentation = iaa.SomeOf((0, 5), [
         iaa.Affine(rotate=(-90,90)),
     iaa.Sometimes(0.2, iaa.GaussianBlur(sigma=(0.0,5.0)))
     ,iaa.Sometimes(0.2, iaa.Affine(scale={"x": (0.7, 1.5), "y": (0.7, 1.5)})),
-    iaa.Sometimes(0.2,  iaa.Multiply((0.7, 1.5))),
+    iaa.Sometimes(0.2, iaa.Multiply((0.7, 1.5))),
     iaa.Sometimes(0.1, iaa.Affine(shear=(-45, 45)))
 ])
 ```
 
-Step 3. During training, we will start with 10 epochs with 1000 steps per epoch (you can adjust the steps in `CellConfig()`) on the heads layers of the model. Then we will do another 20 epochs on all layers. At the end, another 10 epoch on all layers with smaller learning rate. It usually takes less than 1 day to finish the training.  
+Step 3. Training can begin with 10 epochs, 1000 steps per epoch, on the head layers of the model. This can be followed by 20 epochs executed on all layers, and finally, another 10 epoch on all layers using a lower learning rate. It usually takes under 1 day to complete training. Note that step size can be adjusted in `CellConfig()`).
 
 #### 2.2. Predict segmentation with pre-trained model [Notebook](./notebook/2.2.Image_Segmentation_prediction.ipynb)
 
-We will show how to use pre-trained Mask R-CNN model to do prediction on your own dataset in this section. The training images and the prediction images do not have to be the same dataset. As long as they share similar pattern. For example, if cells and nuclei in both images are of similar size and shape, the tumor and immune cells have same coloring, then the prediction would work.
+A pre-trained Mask R-CNN model can be used for prediction outside of the training dataset, so long as the new set of images shares similarities with the trainig set. For example, if cells and nuclei are of similar size and shape, and the tumor and immune cells have the same coloring across both image sets, then the prediction should work.
 
-This step is recommended with CPU, actually, which is cheaper and provides more memories.
+CPU hardware is recommended for this step, because it is cheaper and provides more memory.
 
-Step 1.  Load the path of the pre-trained weights.
+Step 1. Load the path of the pre-trained weights.
 
-Step 2. Set the inference parameters. `DETECTION_MAX_INSTANCES` and `POST_NMS_ROIS_INFERENCE` decide the max number of objects to be predicted in the image. The number of objects depends on the size of image. Smaller parameters allow faster prediction but you will want large enough value for big image. `DETECTION_MIN_CONFIDENCE` is the threshold for the confidence of the prediction. `DETECTION_NMS_THRESHOLD` controls the overlap level on the prediction. 
+Step 2. Set the inference parameters. `DETECTION_MAX_INSTANCES` and `POST_NMS_ROIS_INFERENCE` decide the max number of objects to be predicted in the image. The number of objects depends on image size, and is ideally chosen to represent the smallest number that still covers all objects in the image (smaller parameters allow faster prediction). `DETECTION_MIN_CONFIDENCE` is the threshold for the confidence of the prediction. `DETECTION_NMS_THRESHOLD` controls the level of overlap in the prediction. 
 
-Step 3. Do prediction on training images to see if your training works.
+Step 3. Perform prediction on training images to see if your training works.
 
-Step 4. Do prediction on some validation images.
+Step 4. Perform prediction on some validation images.
 
-Step 5. Do prediction on the list of all images. And since some images can be too big to be predicted at once, we set an unit prediction size, e.g., 512*7104, and then do stitching on the results. 
+Step 5. Perform prediction on the list of all images. Some images can be too large to be predicted at once, so a unit prediction size such as 512*7104 can be set, and stitching can then be performed on the results. 
 
 
 
 ### 3. Cell typing
 
-With the cleaned, and normalized the signal and segmented cells, we can get spatial, morphology and expression information from the images for each cell. Then with these information, we can assign the cell one of the cell types.
+From cleaned images containing normalized signal and segmented cells, it is possible to obtain spatial, morphological and expression information for each cell. This information is used to assign cell types.
 
 #### 3.1. Cell feature extraction [Notebook](./notebook/3.1.Cell_feature_extraction.ipynb)
 
-Step 1. Load all the tif, and segmentation files. Parse their unique ID and check if the order of files matches. 
+Step 1. Load all TIF and segmentation files. Parse their unique IDs and check if the order of files matches. 
 
 Step 2. Load thresholding and cap dataset for preprocessing and normalization. 
 
-Step 3. Run the feature extraction process. We use `parallel` function to utilize multiple CPU for this task. 
+Step 3. Run feature extraction. Use the `parallel` function to utilize multiple CPUs for this task. 
 
 Step 4. Change the data type for better storage. Detailed feature and datatype information:
 
@@ -193,12 +193,12 @@ chan7_area           5145 non-null int16
 
 #### 3.2. Cell typing [Notebook](./notebook/3.2.Cell_typing.ipynb)
 
-Here we will inspect the distribution of cellular features and do cell typing. Then we visualize the cell in each cluster to tune the cell typing parameters.
+This step inspects the distribution of cellular features, performs cell typing, and then visualizes the cells in each cluster to tune cell typing parameters.
 
 Step 1. Load the feature DataFrame. 
 
 Step 2. Display the distribution of the sum, mean and area of the signals. 
 
-Step 3. Based on the distribution, find a cutoff for the average signal and the area of signals. After that, based on the co-expression pattern, allow only one of the expression be positive based on the property of the markers. E.g., for strong T cell expression with tumor signals, it is likely a T cell in tumor region. So we will assign it as a T cell and remove tumor expression.
+Step 3. Based on the distribution, find a cutoff for the average signal and the signal area. Next, based on the co-expression pattern, allow the expression of only one marker to be positive based on known properties. For example, strong T-cell expression signals within a tumor region are likely to represent T cells, so they should be assigned as T cells and tumor expression should be removed.
 
 Step 4. Visualize the positive example of each channel. And re-tune the cell typing parameters based on the visualization results.
