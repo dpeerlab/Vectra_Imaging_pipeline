@@ -4,7 +4,8 @@ channels:
   - https://repo.anaconda.com/pkgs/free
   - defaults
 dependencies:
-  - ipykernel=5.1.3=py37h5ca1d4c_0
+  - python=3.7
+  - ipykernel=5.1.3
   - pip
   - pip:
     - cython==0.29.8
@@ -26,4 +27,3 @@ dependencies:
     - tqdm==4.32.1
     - ipywidgets==7.5.1
     - imagecodecs-lite==2019.12.3
-    
