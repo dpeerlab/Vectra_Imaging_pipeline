@@ -1,4 +1,4 @@
-## Libraries
+ ## Libraries
 
 import numpy as np
 import PIL
@@ -20,6 +20,8 @@ from scipy.stats import wilcoxon, ttest_rel
 import seaborn as sns
 import scipy
 from skimage.measure import label, regionprops
+import scipy.stats as st
+
 
 
 
@@ -42,6 +44,28 @@ def read_tiff(path):
     
     
 ## Mask analysis
+
+def mask_to_rle_nonoverlap(image_id, mask, scores):
+    "Encodes instance masks to submission format."
+    assert mask.ndim == 3, "Mask must be [H, W, count]"
+    # If mask is empty, return line with image ID only
+    if mask.shape[-1] == 0:
+        return "{},".format(image_id)
+    # Remove mask overlaps
+    # Multiply each instance mask by its score order
+    # then take the maximum across the last dimension
+    order = np.argsort(scores)[::-1] + 1  # 1-based descending
+    mask = np.max(mask * np.reshape(order, [1, 1, -1]), -1)
+    # Loop over instance masks
+    lines = []
+    for o in order:
+        m = np.where(mask == o, 1, 0)
+        # Skip if empty
+        if m.sum() == 0.0:
+            continue
+        rle = rle_encode(m)
+        lines.append("{}, {}".format(image_id, rle))
+    return "\n".join(lines)
 
 def rle_encode(mask):
     """Encodes a mask in Run Length Encoding (RLE).
@@ -523,7 +547,7 @@ def build_cell_neighbor_matrix(df_all,img_id,cell_type_list,cell_type_channel,ce
 
 
 
-def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list):
+def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list,min_max=15):
 	im = Image.open(multichannel_tif_path)
 	patient= multichannel_tif_path.split('/')[-2]
 	number_of_channels = 7
@@ -544,7 +568,7 @@ def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list
 		new_im_array[:,:,index]= new_im_array[:,:,index]+im_array[:,:,i]
 	color_matrix =  np.array([[0,255,0],[255,255,255],[0,255,255],[255,0,255],[255,255,0],[0,0,255],[255,0,0]])
 	color_matrix = color_matrix[unique_color]
-	image73=(new_im_array/np.array( [max(25,x) for x in np.max(new_im_array,axis=(0,1))])).dot(color_matrix) 
+	image73=(new_im_array/np.array( [max(min_max,x*0.8) for x in np.max(new_im_array,axis=(0,1))])).dot(color_matrix) 
 	im = Image.fromarray((np.clip(image73,0,255))[:height,:width].astype('uint8')).convert('RGB')
 	outputname = rgb_png_path.replace('tif','png')
 	im.save(outputname)
@@ -703,17 +727,18 @@ def one_image_norm_clean(file_path,dataID,sample_name,channel_name,file_size,ran
     channel_name  =channel_name + ['Inversed Composite', 'Colored Composite']
     #plt.figure(figsize=(30,10))
     img_arr2 =  tifffile.imread(file_path)
-    for i in range(16):
-        if i<8:
+    row=4
+    for i in range(row*4):
+        if i<row*2:
 #             if i==8:
 #                 continue
             if i==0:
-                plt.subplot(4*file_size,4,(i+1)+20*(rank))
+                plt.subplot(row*file_size,row,(i+1)+4*row*(rank))
                 plt.axis('off')
                 plt.text(0.5,0.5, ('Original\nIndex:%d\nsample ID:%s\nImage ID: %s\n') % (rank,sample_name,file_path.replace('[',']').split(']')[1]),ha='center',va='center',fontsize=20)
                 continue
             open_image=img_arr1[i-1]
-            plt.subplot(4*file_size,4,(i+1)+20*(rank))
+            plt.subplot(row*file_size,row,(i+1)+4*row*(rank))
             plt.imshow(open_image)
             plt.colorbar()
             plt.title('Channel %d: %s' % (i-1,channel_name[i-1]))
@@ -721,16 +746,16 @@ def one_image_norm_clean(file_path,dataID,sample_name,channel_name,file_size,ran
         
         else:
             
-            if i==8:
-                plt.subplot(4*file_size,4,(i+1)+20*(rank))
+            if i==2*row:
+                plt.subplot(row*file_size,row,(i+1)+row*4*(rank))
                 plt.axis('off')
                 plt.text(0.5,0.5, ('Clean\nIndex:%d\nsample ID:%s\nImage ID: %s\n') % (rank,sample_name,file_path.replace('[',']').split(']')[1]),ha='center',va='center',fontsize=20)
                 continue
             open_image_2 = img_arr1[i-9]
-            plt.subplot(4*file_size,4,(i+1)+20*(rank))
+            plt.subplot(row*file_size,row,(i+1)+row*4*(rank))
             page=np.array(open_image_2.copy())
             page = ndimage.gaussian_filter(ndimage.median_filter(page,size=2),sigma=1)
-            if i<16:
+            if i<row*4:
                 page[page<thold[i-9]]=0
                 #page = np.ndarray.clip(page,min=0,max=cap[i-11])
                 page = np.ndarray.clip(page/cap[i-9],min=0,max=1)
@@ -753,7 +778,7 @@ def one_report_clean(id_,img_paths,save_dir,sample_name,project_name,thod_df,cap
         one_image_norm_clean(file,dataID,sample_name=sample_name,channel_name=channel_name,file_size=file_size,rank=rank,thold=thod_df.iloc[id_[rank],:],cap=cap_df.loc[sample_name,:])
         index+=1
     plt.suptitle('\n\nQuality control of Vectra data: '+dataID,fontsize=50,y=0.99)
-    plt.tight_layout(rect=[0.01, 0.03, 0.97, 1-0.4/file_size])
+    #plt.tight_layout(rect=[0.01, 0.03, 0.97, 1-0.4/file_size])
     plt.savefig(os.path.join(save_dir,project_name+'QC-report-'+dataID + '-after.jpg'))
     if show: plt.show()
     plt.close()
@@ -774,9 +799,10 @@ def CM_generator_image(tiff_images,rle_images,id_image,marker_list,list_sample,u
     #mask=rle2mask(rle_images[id_image])
     cell_num = sum(1 for i in open(rle_images[id_image], 'rb')) -1 
     OpenRLE = open(rle_images[id_image],'r')
-    image_shape = [int(x) for x in OpenRLE.readline().split(',')]
+    mask_shape = [int(x) for x in OpenRLE.readline().split(',')]
     
     arr_image = tifffile.imread(tiff_images[id_image])[:len(marker_list)]
+    image_shape = arr_image.shape[1:]
     #list_clean_image = []
     list_clean_image = arr_image.copy()
     matrix_df = pd.DataFrame(0,index=range(cell_num),columns=df_header)
@@ -786,7 +812,8 @@ def CM_generator_image(tiff_images,rle_images,id_image,marker_list,list_sample,u
 
     #for local_id,cell in enumerate(mask):
     for local_id,line in enumerate(OpenRLE):
-        cell = rle_decode(' '.join(line.split(',')[1].split(' ')[1:]),image_shape)
+        cell = rle_decode(' '.join(line.split(',')[1].split(' ')[1:]),mask_shape)
+        cell =cell[:image_shape[0],:image_shape[1]]
         #list_feature = []
         matrix_df.loc[local_id,'id_image'] = id_image
         matrix_df.loc[local_id,'id_sample'] = id_sample
@@ -816,14 +843,57 @@ def CM_generator_image(tiff_images,rle_images,id_image,marker_list,list_sample,u
             
             
         
-def plot_marker_distribution(data,title):
+def plot_marker_distribution(data,title,log=False):
     fig_num = data.shape[1]
     col_num = 4
     row_num = fig_num //col_num +1
     plt.figure(figsize=(4*col_num,4*row_num),dpi=60)
     for i in range(fig_num):
         plt.subplot(row_num,col_num,i+1)
-        sns.distplot((data.iloc[:,i]),bins=50,hist_kws={'log':False},norm_hist=True)
+        if log:
+            sns.distplot(np.log10(data.iloc[:,i]+1),bins=50,hist_kws={'log':False},norm_hist=True)
+        else:
+            sns.distplot((data.iloc[:,i]),bins=50,hist_kws={'log':False},norm_hist=True)
+        #ax.set_yscale('log')
+    if log:
+        title=title+'_Log10'
     plt.suptitle(title)
     #plt.tight_layout()
     plt.show()
+
+
+def kde(x, y):
+    xmin=min(x)
+    xmax=max(x)
+    ymin=min(y)
+    ymax=max(y)
+    xx, yy = np.mgrid[xmin:xmax:100j, ymin:ymax:100j]
+    positions = np.vstack([xx.ravel(), yy.ravel()])
+    values = np.vstack([x, y])
+    kernel = st.gaussian_kde(values)
+    density = np.reshape(kernel(positions).T, xx.shape)
+    return xx, yy, density
+
+
+def plot_pair_distribution(dataframe,height=5,sample_size=10000,n_contour=12,dpi=120,scatter_size=20,cmap='hot'):
+    nrow=ncol = dataframe.shape[1]
+    plt.figure(figsize=(nrow*height,ncol*height),dpi=dpi)
+    for i in range(nrow):
+        for j in range(ncol):
+            if i<=j:
+                continue
+            else:
+                sub_df=dataframe[(dataframe.iloc[:,i]>0) & (dataframe.iloc[:,j]>0)]
+                sub_df= sub_df.sample(n=sample_size,random_state=101,replace=1)
+                x=sub_df.iloc[:,i].values
+                y=sub_df.iloc[:,j].values
+                xy=np.vstack([x,y])
+                plt.subplot(nrow,ncol,i*nrow+j+1)
+                sns.scatterplot(x=dataframe.columns[i],y=dataframe.columns[j],data=sub_df,s=scatter_size)
+                xx,yy,density=kde((x), (y))
+                plt.contour(xx,yy,np.arcsinh(density),n_contour,cmap=cmap)
+    plt.show()
+
+
+
+
