@@ -35,12 +35,12 @@ except Exception:
 
 setup(
     name='davinci',
-    version='0.1',
-    #url='https://github.com/matterport/Mask_RCNN',
+    version='0.2',
+    #url='',
     author='Yubin Xie',
     author_email='yoobintse@gmail.com',
     license='MIT',
-    description='Mask R-CNN for object detection and instance segmentation',
+    description='For Vectra image analysis',
     packages=["davinci"],
     install_requires=install_reqs,
     include_package_data=True,
