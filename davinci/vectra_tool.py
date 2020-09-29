@@ -86,6 +86,9 @@ def rle_decode(rle, shape):
     """Decodes an RLE encoded list of space separated
     numbers and returns a binary mask."""
     rle = list(map(int, rle.split()))
+    if(len(rle) % 2 != 0):
+        #rle.append(0)
+        rle=rle[:-1]
     rle = np.array(rle, dtype=np.int32).reshape([-1, 2])
     rle[:, 1] += rle[:, 0]
     rle -= 1
@@ -547,7 +550,7 @@ def build_cell_neighbor_matrix(df_all,img_id,cell_type_list,cell_type_channel,ce
 
 
 
-def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list,min_max=15):
+def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list,thold=1,min_max=15,norm_factor=0.6):
 	im = Image.open(multichannel_tif_path)
 	patient= multichannel_tif_path.split('/')[-2]
 	number_of_channels = 7
@@ -559,7 +562,7 @@ def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list
 			raw_width, raw_height = max([ e[1][2] for e in page.tile]),max([ e[1][3] for e in page.tile])
 			im.size = raw_width, raw_height
 			page_arr = np.array(page)
-			page_arr[page_arr<=1]=0
+			page_arr[page_arr<=thold]=0
 			im_array[:,:,i] = page_arr
 	unique_color = sorted(set(color_list))
 	new_im_array = np.zeros([raw_height,raw_width,len(unique_color)])
@@ -568,12 +571,38 @@ def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list
 		new_im_array[:,:,index]= new_im_array[:,:,index]+im_array[:,:,i]
 	color_matrix =  np.array([[0,255,0],[255,255,255],[0,255,255],[255,0,255],[255,255,0],[0,0,255],[255,0,0]])
 	color_matrix = color_matrix[unique_color]
-	image73=(new_im_array/np.array( [max(min_max,x*0.8) for x in np.max(new_im_array,axis=(0,1))])).dot(color_matrix) 
+	image73=(new_im_array/np.array( [max(min_max,x*norm_factor) for x in np.max(new_im_array,axis=(0,1))])).dot(color_matrix) 
 	im = Image.fromarray((np.clip(image73,0,255))[:height,:width].astype('uint8')).convert('RGB')
 	outputname = rgb_png_path.replace('tif','png')
 	im.save(outputname)
     
-    
+
+# def convert_one_image(multichannel_tif_path,rgb_png_path,channel_list,color_list,min_max=15,norm_factor=0.6):
+#     im = Image.open(multichannel_tif_path)
+#     patient= multichannel_tif_path.split('/')[-2]
+#     number_of_channels = 7
+#     width, height = im.width,im.height
+#     raw_width, raw_height = max([ e[1][2] for e in im.tile]),max([ e[1][3] for e in im.tile])
+#     im_array = np.zeros([raw_height,raw_width,number_of_channels])
+#     for i, page in enumerate(ImageSequence.Iterator(im)):
+#         if i in channel_list:
+#             raw_width, raw_height = max([ e[1][2] for e in page.tile]),max([ e[1][3] for e in page.tile])
+#             im.size = raw_width, raw_height
+#             page_arr = np.array(page)
+#             page_arr[page_arr<=1]=0
+#             im_array[:,:,i] = page_arr
+#     unique_color = sorted(set(color_list))
+#     new_im_array = np.zeros([raw_height,raw_width,len(unique_color)])
+#     for i,x in enumerate(color_list):
+#         index = unique_color.index(x)
+#         new_im_array[:,:,index]= new_im_array[:,:,index]+im_array[:,:,i]
+#     color_matrix =  np.array([[0,255,0],[255,255,255],[0,255,255],[255,0,255],[255,255,0],[0,0,255],[255,0,0]])
+#     color_matrix = color_matrix[unique_color]
+#     image73=(new_im_array/np.array( [max(min_max,x*norm_factor) for x in np.max(new_im_array,axis=(0,1))])).dot(color_matrix) 
+#     im = Image.fromarray((np.clip(image73,0,255))[:height,:width].astype('uint8')).convert('RGB')
+#     outputname = rgb_png_path.replace('tif','png')
+#     im.save(outputname)
+
     
 def threshold_one_plot(tiff_arr,index,scale='p98',min_thold=4,max_thold=8,dapi=False):
     # Gaussian blur, Tri-angel
@@ -894,6 +923,45 @@ def plot_pair_distribution(dataframe,height=5,sample_size=10000,n_contour=12,dpi
                 plt.contour(xx,yy,np.arcsinh(density),n_contour,cmap=cmap)
     plt.show()
 
+def plot_celltype_single(sample_df,cell_typing_df,tiff_images,channel_list,positive=1,sampling_size=10,box_size=25,image_radius=50,random_state=101,dpi=80,):
+    plt.figure(figsize=(sampling_size*3,len(channel_list)*3),dpi=80,facecolor='white')
+    for i in range(len(channel_list)):
+        if positive:
+            target_df = sample_df[cell_typing_df.loc[:,channel_list[i]]==1].sample(n=sampling_size,random_state=random_state)
+        else:
+            target_df = sample_df[cell_typing_df.loc[:,channel_list[i]]==0]
+            target_df=target_df[target_df.loc[:,channel_list[i]+'_sum']>0].sample(n=sampling_size,random_state=random_state)
+        for j in range(sampling_size):
+            image_arr = tifffile.imread(tiff_images[target_df['id_image'].values[j]])[i]
+            ax2 = plt.subplot(len(channel_list),sampling_size,i*sampling_size+j+1)
+            x_ = int(target_df['centroid_x'].values[j])
+            y_ = int(target_df['centroid_y'].values[j])
+            target_img= image_arr[max(x_-image_radius,0):min((x_+image_radius),image_arr.shape[0]),max(y_-image_radius,0):min(y_+image_radius,image_arr.shape[1])]
+            ax2.imshow( target_img,vmin=1,vmax=max(np.max(target_img),15))        
+            rect = patches.Rectangle( (y_-max(y_-image_radius,0)-box_size,x_-max(x_-image_radius,0) -box_size),box_size*2,box_size*2,linewidth=2,edgecolor='w',facecolor='none')
 
+            ax2.add_patch(rect)
+            ax2.set_axis_off()
+            if j==0:
+                ax2.title.set_text(channel_list[i] + '_' +str(target_df.iloc[j,10+2*i]/target_df.iloc[j,3]))
+            else: 
+                ax2.title.set_text(str(target_df.iloc[j,10+2*i]/target_df.iloc[j,3]))
 
+def plot_celltype_rgb(sample_df,cell_typing_df,rgb_images,channel_list,sampling_size=10,box_size=25,image_radius=50,random_state=101,dpi=80,):
+    plt.figure(figsize=(sampling_size*3,len(channel_list)*3),dpi=dpi)
+    for i in range(len(channel_list)):
+        target_df = sample_df[cell_typing_df.loc[:,channel_list[i]]==1].sample(n=sampling_size,random_state=random_state)
+        for j in range(sampling_size):
+            image_arr = imageio.imread(rgb_images[target_df['id_image'].values[j]])
+            ax2 = plt.subplot(len(channel_list),sampling_size,i*sampling_size+j+1)
+            x_ = int(target_df['centroid_x'].values[j])
+            y_ = int(target_df['centroid_y'].values[j])
+            ax2.imshow( image_arr[max(x_-image_radius,0):min((x_+image_radius),image_arr.shape[0]),max(y_-image_radius,0):min(y_+image_radius,image_arr.shape[1])])
+            rect = patches.Rectangle( (y_-max(y_-image_radius,0)-box_size,x_-max(x_-image_radius,0) -box_size),box_size*2,box_size*2,linewidth=2,edgecolor='w',facecolor='none')
 
+            ax2.add_patch(rect)
+            ax2.set_axis_off()
+            if j==0:
+                ax2.title.set_text(channel_list[i] + '_' +str(target_df.iloc[j,10+2*i]/target_df.iloc[j,3]))
+            else: 
+                ax2.title.set_text(str(target_df.iloc[j,10+2*i]/target_df.iloc[j,3]))
