@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/229310656.svg)](https://zenodo.org/badge/latestdoi/229310656)
+
 # Vectra Imaging Processing Pipeline
 
 Multiplexed imaging data is providing dramatic opportunities to understand the tumor microenvironment, but there is an acute need for better analysis tools. Here, we provide a pipeline for multiplexed imaging quality control and processing. It contains three core steps: 
